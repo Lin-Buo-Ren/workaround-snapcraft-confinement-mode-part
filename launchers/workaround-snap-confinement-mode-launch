@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# This launcher provides `SNAP_X_CONFINEMENT_MODE` environment variable to its depending launcher
+
+set \
+    -o errexit \
+    -o nounset
+
+# Output: strict, classic, or jail
+detect_snapd_confinenment_mode(){
+    local \
+        real_home_dir
+    
+    real_home_dir="$(
+        getent \
+            passwd \
+            "${USER}" \
+        | cut \
+            --delimiter=: \
+            --fields=6
+    )"
+    
+    # strict or classic?
+    if test "${HOME}" != "${real_home_dir}"; then
+        printf strict
+    else # classic or jail?
+        local file_under_test
+    
+        if test -e ~/.bashrc; then
+            file_under_test=~/.bashrc
+        elif test -e ~/.profile; then
+            file_under_test=~/.profile
+        elif test -e ~/.config; then
+            file_under_test=~/.config
+        else
+            file_under_test=none
+        fi
+
+        # In jail mode, HOME is set to the user's real home, but interface restrictions (i.e. no dotfiles access right under HOME) applies.
+        if test "${file_under_test}" != none; then
+            if cat "${file_under_test}" &> /dev/null; then
+                printf classic
+            else
+                printf jail
+            fi
+        else
+            # assume classic
+            printf classic
+        fi
+    fi
+}
+
+export \
+    SNAP_X_CONFINEMENT_MODE
+SNAP_X_CONFINEMENT_MODE="$(detect_snapd_confinenment_mode)"
+
+exec "${@}"

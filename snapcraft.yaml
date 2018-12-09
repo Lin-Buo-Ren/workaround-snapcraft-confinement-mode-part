@@ -1,0 +1,15 @@
+name: workaround-snapcraft-confinement-mode
+version: current
+summary: SNAP_CONFINEMENT_MODE Workaround Remote Part
+description: |
+  This remote part provides a launcher that sets the `SNAP_X_CONFINEMENT_MODE` environmental variable to provide confinement mode detection to the depending part.
+
+grade: stable
+confinement: strict
+
+parts:
+  workaround-snapcraft-confinement-mode:
+    source: launchers
+    plugin: dump
+    organize:
+      '*-launch': bin/
